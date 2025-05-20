@@ -93,9 +93,12 @@ export class ContractViewerComponent implements OnInit {
 
       const iniateTransfer : TransferProcessInput = {
         assetId: contractOffer.assetId,
-        connectorAddress: contractOffer.originator,
-
-        connectorId: "consumer", //doesn't matter, but cannot be null
+        // Updated property name from connectorAddress to counterPartyAddress
+        counterPartyAddress: contractOffer.originator,
+        
+        // Added required transferType property
+        transferType: "HttpData",
+        
         contractId: contract.id,
         dataDestination: {
           "type": storageTypeId,

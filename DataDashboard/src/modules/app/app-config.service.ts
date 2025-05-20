@@ -1,6 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import { LocationStrategy } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 
 export interface AppConfig {
   managementApiUrl: string;
@@ -18,15 +19,15 @@ export class AppConfigService {
 
   constructor(private http: HttpClient, private locationStrategy: LocationStrategy) {}
 
-  loadConfig(): Promise<void> {
-    let appConfigUrl = this.locationStrategy.prepareExternalUrl('assets/config/app.config.json');
-
-    return this.http
-      .get<AppConfig>(appConfigUrl)
-      .toPromise()
-      .then(data => {
-        this.config = data;
-      });
+  async loadConfig(): Promise<void> {
+    const appConfigUrl = this.locationStrategy.prepareExternalUrl('assets/config/app.config.json');
+    
+    try {
+      const data = await firstValueFrom(this.http.get<AppConfig>(appConfigUrl));
+      this.config = data;
+    } catch (error) {
+      console.error('Failed to load application configuration', error);
+    }
   }
 
   getConfig(): AppConfig | undefined {

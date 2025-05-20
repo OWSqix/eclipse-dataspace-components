@@ -55,13 +55,23 @@ export class CatalogBrowserComponent implements OnInit {
   }
 
   onNegotiateClicked(contractOffer: ContractOffer) {
-    const initiateRequest: ContractNegotiationRequest = {
-      connectorAddress: contractOffer.originator,
-      offer: {
-        offerId: contractOffer.id,
-        assetId: contractOffer.assetId,
-        policy: contractOffer.policy,
-      },
+    // Create a custom interface that extends ContractNegotiationRequest with our additional properties
+    interface CustomContractNegotiationRequest extends ContractNegotiationRequest {
+      // Add these custom properties to store values we need but are not in the new API
+      offerId?: string;
+      assetId?: string;
+      connectorId?: string;
+      providerId?: string;
+    }
+    
+    // The new version expects just counterPartyAddress and policy
+    const initiateRequest: CustomContractNegotiationRequest = {
+      counterPartyAddress: contractOffer.originator,
+      policy: contractOffer.policy as any, // Cast PolicyInput to Policy for now
+      
+      // Keep these properties for our own use, even though they're not part of the official interface
+      offerId: contractOffer.id,
+      assetId: contractOffer.assetId,
       connectorId: 'connector',
       providerId: contractOffer["dcat:service"].id
     };
@@ -72,10 +82,10 @@ export class CatalogBrowserComponent implements OnInit {
       "ERROR"];
 
     this.apiService.initiateNegotiation(initiateRequest).subscribe(negotiationId => {
-      this.finishedNegotiations.delete(initiateRequest.offer.offerId);
-      this.runningNegotiations.set(initiateRequest.offer.offerId, {
+      this.finishedNegotiations.delete(initiateRequest.offerId!);
+      this.runningNegotiations.set(initiateRequest.offerId!, {
         id: negotiationId,
-        offerId: initiateRequest.offer.offerId
+        offerId: initiateRequest.offerId!
       });
 
       if (!this.pollingHandleNegotiation) {

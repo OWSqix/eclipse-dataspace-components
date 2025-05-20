@@ -15,8 +15,17 @@ import {
   ContractNegotiation,
   PolicyInput,
   TransferProcess,
-  TransferProcessInput
+  TransferProcessInput,
+  Policy
 } from "../../mgmt-api-client/model";
+
+// Custom interface for backward compatibility
+interface CustomContractNegotiationRequest extends ContractNegotiationRequest {
+  offerId?: string;
+  assetId?: string;
+  connectorId?: string;
+  providerId?: string;
+}
 
 
 
@@ -58,8 +67,8 @@ export class CatalogBrowserService {
 
           const hasPolicy = dataSet["odrl:hasPolicy"];
           const policy: PolicyInput = {
-            //currently hardcoded to SET since parsed type is {"@policytype": "set"}
-            "@type": "set", //TODO Use TypeEnum https://github.com/Think-iT-Labs/edc-connector-client/issues/103
+            // Use correct policy type value from new version
+            "@type": "Set", // "Set" is the correct value for the PolicyType
             "@context" : "http://www.w3.org/ns/odrl.jsonld",
             "uid": hasPolicy["@id"],
             "assignee": hasPolicy["assignee"],
@@ -101,8 +110,14 @@ export class CatalogBrowserService {
     return this.transferProcessService.getTransferProcess(id);
   }
 
-  initiateNegotiation(initiate: ContractNegotiationRequest): Observable<string> {
-    return this.negotiationService.initiateContractNegotiation(initiate).pipe(map(t => t.id!))
+  initiateNegotiation(initiate: CustomContractNegotiationRequest): Observable<string> {
+    // Extract only the properties the API expects in the new version
+    const apiRequest: ContractNegotiationRequest = {
+      counterPartyAddress: initiate.counterPartyAddress,
+      policy: initiate.policy
+    };
+    
+    return this.negotiationService.initiateContractNegotiation(apiRequest).pipe(map(t => t.id!))
   }
 
   getNegotiationState(id: string): Observable<ContractNegotiation> {

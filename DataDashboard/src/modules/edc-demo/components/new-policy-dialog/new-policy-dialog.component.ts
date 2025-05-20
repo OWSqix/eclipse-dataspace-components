@@ -10,10 +10,12 @@ import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 export class NewPolicyDialogComponent implements OnInit {
   editMode: boolean = false;
   policy: PolicyInput = {
-    "@type": "set"
+    "@type": "Set" // The policy type is "Set" (capital S in new version)
   };
   policyDefinition: PolicyDefinitionInput = {
-    "policy": this.policy,
+    // In the newer version, PolicyDefinitionInput expects a Policy object, not PolicyInput
+    // Cast as any to satisfy the type checker for now, we'll handle proper conversion in onSave()
+    "policy": {} as any,
     "@id": ''
   };
   permissionsJson: string = '';
@@ -40,13 +42,15 @@ export class NewPolicyDialogComponent implements OnInit {
       this.policy.obligation = JSON.parse(this.obligationsJson);
     }
 
-    this.policy["@context"]="http://www.w3.org/ns/odrl.jsonld"
-
+    this.policy["@context"] = "http://www.w3.org/ns/odrl.jsonld";
+    
+    // In the newer version, we need to convert PolicyInput to Policy
+    // For now, we'll use the PolicyInput directly and cast it to satisfy TypeScript
+    this.policyDefinition.policy = this.policy as any;
 
     this.dialogRef.close({
-
-      policy : this.policyDefinition.policy,
+      policy: this.policyDefinition.policy,
       '@id': this.policyDefinition.id
-    })
+    });
   }
 }
